@@ -1,45 +1,68 @@
+from typing import Literal
 from openai import OpenAI
 from dotenv import load_dotenv
-from typing import Literal
 import os
 
 class Agent:
-    def __init__(self, name: str, persona: str, model='gpt-5-mini'):
+    def __init__(self, name, persona, topic, model='gpt-5-mini'):
         self.name = name
         self.persona = persona
+        self.topic = topic
         self.model = model
         
-        load_dotenv()  # Load environment variables from .env file
+        self.messages = [
+            {"role": "system", "content": f"Your name is {self.name}. You are {self.persona}."},
+            {"role": "system", "content": "Your responses should mimic real human conversation.  No headings or bullet points, just natural flowing text that aligns with your persona."},
+            {"role": "system", "content": f"The topic of discussion is: {self.topic}."},
+            {"role": "system", "content": f"Try not to repeat yourself or use similar phrases over and over again. Keep it fresh and engaging."}
+        ]
+        
+        self.responses = []
+        
+        load_dotenv()
         self.api_key = os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment variables.")
+        self.client = OpenAI(api_key=self.api_key)
         
-        self.person = f"Your name is {self.name}. You are {self.persona}."
-        
-        self.responses = []  # Store previous responses
-        
-    def set_side(self, side: Literal['Pro', 'Con', 'Moderator', 'Fact Checker']):
-        self.side = side
-        self.person += f" You are playing the role of {self.side} side of this debate."
-        
-    def respond(self, transcript_text: str, meta_prompt: str) -> str:
-        openai = OpenAI(api_key=self.api_key)
-        
-        response = openai.chat.completions.create(
+    def ask(self, related_text: str, meta_prompt: str, indent_paragraphs=True) -> str:
+        response = self.client.chat.completions.create(
             model=self.model,
-            messages=[
-                {"role": "system", "content": self.person},
-                {"role": "system", "content": "You are to respond in the style of your assigned role of this debate based on the transcript so far."},
-                {"role": "system", "content": "Respond like as if you human in this debate.  Dont use headings and don't use lists.  Your response should feel natural."},
-                {"role": "system", "content": "Try to keep your response close to 250 words or less."},
-                
-                {"role": "assistant", "content": transcript_text},
+            messages=self.messages + [
+                {"role": "assistant", "content": related_text},
                 {"role": "user", "content": meta_prompt}
             ]
         )
         
         self.responses.append(response)
-        return response.choices[0].message.content
+        
+        if indent_paragraphs:
+            return response.choices[0].message.content.replace("\n", "\n\t")
+        else:
+            return response.choices[0].message.content
     
     def __repr__(self):
-        return f"Agent(name={self.name}, persona={self.persona}, side={getattr(self, 'side', 'Unassigned')})"
+        return f"Agent(name={self.name}, persona={self.persona}, model={self.model})"
+    
+class Debater(Agent):
+    def __init__(self, name, persona, topic, side: Literal['Pro', 'Con'], model='gpt-5-mini'):
+        super().__init__(name, persona, topic, model)
+        self.side = side
+        
+        self.messages.extend([
+            {"role": "system", "content": f"You are on the {self.side} side of the argument.  You should always argue in favor of your side."},
+            {"role": "system", "content": "Try to keep your responses to a maximum of 250 words."}
+        ])
+
+class Moderator(Agent):
+    def __init__(self, name, persona, topic, model='gpt-5-mini'):
+        super().__init__(name, persona, topic, model)
+        self.side= 'Moderator'
+
+
+if __name__ == "__main__":
+    dave = Debater(
+        name="Dave",
+        persona="A quick witted man who loves to poke fun at the others side in an arrogant way.  He is very clever in his arguments and loves to use humor to make his points.",
+        topic="Parking tickets should be abolished.",
+        side='Pro'
+    )
+    print(dave.ask("", "What is your opening statement?"))
