@@ -30,11 +30,21 @@ if __name__ == "__main__":
     print(f"Here is what {dave.name} would like to say about the topic:\n{dave.ask('', 'Give the moderator a list of what you would like to talk about in the debate.', indent_paragraphs=False)}\n")
     print(f"Here is what {tristan.name} would like to say about the topic:\n{tristan.ask('', 'Give the moderator a list of what you would like to talk about in the debate.', indent_paragraphs=False)}\n")
     
-    moderation = input(f"Give an introduction of the debates topic and members.\n>")
+    # Generate automated moderator introduction
+    introduction_prompt = f"""Please provide a welcoming introduction for this debate. The topic is: "{topic}"
+
+The debaters are:
+- {dave.name} (Pro side): {dave.persona}
+- {tristan.name} (Con side): {tristan.persona}
+
+Give a professional, engaging introduction that welcomes the audience, introduces the topic and the debaters, and sets the stage for the debate."""
+    
+    moderation = moderator.ask('', introduction_prompt, indent_paragraphs=False)
+    print(f"\nModerator Introduction:\n{moderation}\n")
     transcript.add_message(moderator, moderation)
     
     while True:
-        # TODO: Make moderator introduction more automated
+        # Moderator introduction is now automated (previously TODO)
         # run through debate rounds until user decides to end
         moderation = input(f"What would you like {dave.name} to respond to? (q to end debate)\n>")
         if moderation.lower() == 'q':
