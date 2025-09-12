@@ -34,6 +34,7 @@ if __name__ == "__main__":
     transcript.add_message(moderator, moderation)
     
     while True:
+        # TODO: Make moderator introduction more automated
         # run through debate rounds until user decides to end
         moderation = input(f"What would you like {dave.name} to respond to? (q to end debate)\n>")
         if moderation.lower() == 'q':
