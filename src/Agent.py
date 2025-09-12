@@ -58,6 +58,7 @@ class Agent:
         self.topic = topic
         self.model = model
         
+        # Initialize the system messages that define the agent's behavior
         self.messages = [
             {"role": "system", "content": f"Your name is {self.name}. You are {self.persona}."},
             {"role": "system", "content": "Your responses should mimic real human conversation.  No headings or bullet points, just natural flowing text that aligns with your persona."},
@@ -65,8 +66,10 @@ class Agent:
             {"role": "system", "content": f"Try not to repeat yourself or use similar phrases over and over again. Keep it fresh and engaging."}
         ]
         
+        # Store all API responses for potential future analysis
         self.responses = []
         
+        # Load OpenAI API key from environment variables
         load_dotenv()
         self.api_key = os.getenv("OPENAI_API_KEY")
         self.client = OpenAI(api_key=self.api_key)
@@ -111,8 +114,10 @@ class Agent:
             ]
         )
         
+        # Store the response for potential analysis
         self.responses.append(response)
         
+        # Format the response with optional paragraph indentation
         if indent_paragraphs:
             return response.choices[0].message.content.replace("\n", "\n\t")
         else:
@@ -191,6 +196,7 @@ class Debater(Agent):
         super().__init__(name, persona, topic, model)
         self.side = side
         
+        # Add debate-specific system messages
         self.messages.extend([
             {"role": "system", "content": f"You are on the {self.side} side of the argument.  You should always argue in favor of your side."},
             {"role": "system", "content": "Try to keep your responses to a maximum of 250 words."}
@@ -243,10 +249,17 @@ class Moderator(Agent):
             doesn't receive side-specific argumentative constraints like Debaters do.
         """
         super().__init__(name, persona, topic, model)
-        self.side= 'Moderator'
+        # Set the moderator's role identifier
+        self.side = 'Moderator'
 
 
 if __name__ == "__main__":
+    """
+    Example usage of the Debater class.
+    
+    Creates a sample debater and demonstrates how to get an opening statement.
+    This is primarily for testing and development purposes.
+    """
     dave = Debater(
         name="Dave",
         persona="A quick witted man who loves to poke fun at the others side in an arrogant way.  He is very clever in his arguments and loves to use humor to make his points.",

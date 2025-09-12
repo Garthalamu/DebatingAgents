@@ -104,11 +104,13 @@ class Transcript:
         r_string += f"Pro: {pro.name}  |  Con: {con.name}\n"
         r_string += "="*40 + "\n\n"
         
+        # Add each message with timestamp and speaker information
         for entry in self.messages:
             time_str = entry["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
             r_string += f"[{time_str}] {entry['agent'].name} ({entry['agent'].side}):\n\t{entry['message']}\n"
             r_string += "-"*40 + "\n\n"
         
+        # Add final marker if this is the complete transcript
         if final:
             r_string += "="*40 + "\n\n"
             r_string += "[END OF DEBATE]"
@@ -137,6 +139,7 @@ class Transcript:
         if not self.messages:
             return ""
         
+        # Get the most recent message
         entry = self.messages[-1]
         time_str = entry["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
         return f"[{time_str}] {entry['agent'].name} ({entry['agent'].side}):\n\t{entry['message']}\n\n"
